@@ -1,0 +1,26 @@
+[install]
+# Use exact versions for production stability
+exact = false
+
+# Enable optional peer dependencies
+optional = true
+
+# Improve install performance
+frozenLockfile = false
+production = false
+
+[install.cache]
+# Enable package caching
+disable = false
+
+[test]
+# Use Bun's native test runner
+preload = ["./test/setup.ts"]
+
+[run]
+# Enable hot module replacement
+hot = true
+
+# Shell configuration
+shell = "bun"
+bun = true
