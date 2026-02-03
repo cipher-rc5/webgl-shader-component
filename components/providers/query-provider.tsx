@@ -1,12 +1,11 @@
-"use client";
-
-import type { ReactNode } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
-import { JSX } from "react/jsx-runtime"; // Declared JSX variable
+"use client"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { type ReactNode } from "react"
+import { useState } from "react"
+import { JSX } from "react/jsx-runtime"
 
 interface QueryProviderProps {
-	readonly children: ReactNode;
+	readonly children: ReactNode
 }
 
 export function QueryProvider({ children }: QueryProviderProps): JSX.Element {
@@ -23,11 +22,11 @@ export function QueryProvider({ children }: QueryProviderProps): JSX.Element {
 					},
 				},
 			}),
-	);
+	)
 
 	return (
 		<QueryClientProvider client={queryClient}>
 			{children}
 		</QueryClientProvider>
-	);
+	)
 }

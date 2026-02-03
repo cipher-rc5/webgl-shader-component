@@ -13,21 +13,25 @@ A high-performance Next.js 16.1.4 application optimized for the Bun runtime, fea
 ## Getting Started
 
 Install dependencies:
+
 ```bash
 bun install
 ```
 
 Run the development server:
+
 ```bash
 bun dev
 ```
 
 Build for production:
+
 ```bash
 bun run build
 ```
 
 Format code with dprint:
+
 ```bash
 bun run format
 ```

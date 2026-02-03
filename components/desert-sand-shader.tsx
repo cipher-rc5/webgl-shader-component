@@ -1,9 +1,8 @@
-"use client";
-
-import type { HTMLAttributes } from "react";
-import { forwardRef, useMemo } from "react";
-import { ShaderCanvas } from "./shader-canvas";
-import { cn } from "@/lib/utils";
+"use client"
+import { cn } from "@/lib/utils"
+import type { HTMLAttributes } from "react"
+import { forwardRef, useMemo } from "react"
+import { ShaderCanvas } from "./shader-canvas"
 
 // Fragment Shader Code
 const FRAGMENT_SHADER_CODE = `
@@ -364,14 +363,13 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ){
 
     fragColor = vec4(sqrt(clamp(col, 0., 1.)), 1);
 }
-`;
+`
 
-export interface DesertSandShaderProps
-	extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
-	readonly speed?: number;
-	readonly sandDetail?: number;
-	readonly bumpIntensity?: number;
-	readonly mistIntensity?: number;
+export interface DesertSandShaderProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
+	readonly speed?: number
+	readonly sandDetail?: number
+	readonly bumpIntensity?: number
+	readonly mistIntensity?: number
 }
 
 export const DesertSandShader = forwardRef<
@@ -394,7 +392,7 @@ export const DesertSandShader = forwardRef<
 			u_mistIntensity: { type: "1f" as const, value: mistIntensity },
 		}),
 		[speed, sandDetail, bumpIntensity, mistIntensity],
-	);
+	)
 
 	return (
 		<div className={cn("h-full w-full", className)} ref={ref} {...props}>
@@ -405,7 +403,7 @@ export const DesertSandShader = forwardRef<
 				uniforms={uniforms}
 			/>
 		</div>
-	);
-});
+	)
+})
 
-DesertSandShader.displayName = "DesertSandShader";
+DesertSandShader.displayName = "DesertSandShader"
