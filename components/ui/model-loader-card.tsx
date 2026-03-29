@@ -4,6 +4,7 @@ import type { JSX } from "react"
 interface ModelLoaderCardProps {
 	readonly progress: number
 	readonly onLoadModel: () => void
+	readonly error: string | null
 }
 
 /**
@@ -13,6 +14,7 @@ interface ModelLoaderCardProps {
 export function ModelLoaderCard({
 	progress,
 	onLoadModel,
+	error,
 }: ModelLoaderCardProps): JSX.Element {
 	const isLoading = progress > 0 && progress < 100
 
@@ -20,12 +22,17 @@ export function ModelLoaderCard({
 		<div className="absolute inset-x-0 bottom-full mb-6 flex justify-center">
 			<div className="clay-card w-full max-w-md p-6 text-center">
 				<h3 className="mb-2 text-lg font-semibold text-zinc-800">
-					Initialize Local Brain
+					Enable Assistant
 				</h3>
 				<p className="mb-4 text-sm text-zinc-600">
-					Load the Llama-3 model into your browser's WebGPU engine to chat
-					privately.
+					Load a local WebLLM model in your browser using WebGPU.
 				</p>
+
+				{error && (
+					<p className="mb-4 rounded-xl bg-red-100 px-3 py-2 text-xs text-red-700">
+						{error}
+					</p>
+				)}
 
 				{isLoading ?
 					<div className="w-full space-y-2">
@@ -46,7 +53,7 @@ export function ModelLoaderCard({
 							className="neomorphic neomorphic-hover flex items-center gap-2 rounded-full px-8 py-3 text-sm font-medium text-zinc-800 transition-all active:scale-95"
 						>
 							<Cpu size={18} />
-							<span>Load Model (2.4GB)</span>
+							<span>Load Local Model</span>
 						</button>
 					</div>
 				}

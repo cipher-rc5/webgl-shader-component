@@ -9,71 +9,10 @@ import { useChat } from "@/lib/hooks/use-chat"
 import { useModelLoader } from "@/lib/hooks/use-model-loader"
 import { cn } from "@/lib/utils"
 import { MessageSquare, Plus } from "lucide-react"
-import { useEffect, useRef } from "react"
-
-const CUSTOM_STYLES = `
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-  }
-
-  @keyframes spin-slow {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-
-  .glass-orb {
-    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.1));
-    backdrop-filter: blur(12px);
-    box-shadow:
-      inset -10px -10px 20px rgba(0,0,0,0.05),
-      inset 10px 10px 20px rgba(255,255,255,0.8),
-      0 20px 40px rgba(0,0,0,0.1);
-  }
-
-  /* Neumorphic shadows */
-  .neomorphic {
-    background: #e8e8e8;
-    box-shadow:
-      8px 8px 16px rgba(163, 177, 198, 0.6),
-      -8px -8px 16px rgba(255, 255, 255, 0.5);
-  }
-
-  .neomorphic-inset {
-    background: #e8e8e8;
-    box-shadow:
-      inset 6px 6px 12px rgba(163, 177, 198, 0.4),
-      inset -6px -6px 12px rgba(255, 255, 255, 0.5);
-  }
-
-  .neomorphic-hover:hover {
-    box-shadow:
-      6px 6px 12px rgba(163, 177, 198, 0.5),
-      -6px -6px 12px rgba(255, 255, 255, 0.4);
-  }
-
-  .clay-card {
-    background: linear-gradient(145deg, #f0f0f0, #e0e0e0);
-    box-shadow:
-      10px 10px 20px rgba(163, 177, 198, 0.4),
-      -10px -10px 20px rgba(255, 255, 255, 0.6);
-    border-radius: 20px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: rgba(0,0,0,0.1);
-    border-radius: 20px;
-  }
-`
+import { useEffect, useRef, type FormEvent } from "react"
 
 export default function Page(): React.JSX.Element {
-	const { isLoaded, progress, loadModel } = useModelLoader()
+	const { isLoaded, progress, loadModel, error } = useModelLoader()
 	const {
 		messages,
 		input,
@@ -82,6 +21,7 @@ export default function Page(): React.JSX.Element {
 		currentSessionId,
 		setInput,
 		sendMessage,
+		stopGenerating,
 		startNewChat,
 		switchSession,
 	} = useChat()
@@ -93,7 +33,7 @@ export default function Page(): React.JSX.Element {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
 	}, [messages, isTyping])
 
-	const handleSend = async (e: SubmitEvent): Promise<void> => {
+	const handleSend = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
 		e.preventDefault()
 		if (!input.trim()) return
 		await sendMessage(input)
@@ -103,23 +43,23 @@ export default function Page(): React.JSX.Element {
 		setInput(example)
 	}
 
+	const lastMessage = messages.at(-1)
+	const showTypingIndicator =
+		isTyping &&
+		(lastMessage?.role !== "assistant" || lastMessage.content.length === 0)
+
 	return (
-		<div
-			className="flex h-screen w-full overflow-hidden bg-[#e8e8e8] font-sans text-zinc-900 selection:bg-[#F4D03F]/30"
-			suppressHydrationWarning
-		>
-			<style>{CUSTOM_STYLES}</style>
+		<div className="flex h-screen w-full overflow-hidden bg-[#e8e8e8] font-sans text-zinc-900 selection:bg-[#F4D03F]/30">
 
 			{/* Sidebar with Past Searches */}
 			<aside
 				className="z-20 flex w-64 flex-col gap-4 bg-[#e8e8e8] p-4"
-				suppressHydrationWarning
 			>
 				{/* Logo */}
 				<div className="neomorphic mb-2 flex items-center justify-center rounded-2xl bg-[#121212] p-4">
 					<img
-						src="/fensory_logo.svg"
-						alt="Fensory"
+						src="/cipher_logo_dark.svg"
+						alt="Cipher"
 						className="h-8 w-auto brightness-0 invert"
 						style={{ filter: "brightness(0) invert(1)" }}
 					/>
@@ -187,11 +127,11 @@ export default function Page(): React.JSX.Element {
 								{/* Response Container */}
 								<div className="mb-6 flex-1 overflow-hidden rounded-3xl">
 									<div className="neomorphic-inset custom-scrollbar h-full overflow-y-auto rounded-3xl p-6">
-										<div className="space-y-6">
-											{messages.map((msg, idx) => <ChatMessage key={idx} message={msg} />)}
-											{isTyping && <TypingIndicator />}
-											<div ref={messagesEndRef} />
-										</div>
+									<div className="space-y-6">
+										{messages.map((msg, idx) => <ChatMessage key={idx} message={msg} />)}
+										{showTypingIndicator && <TypingIndicator />}
+										<div ref={messagesEndRef} />
+									</div>
 									</div>
 								</div>
 							</div>
@@ -209,9 +149,9 @@ export default function Page(): React.JSX.Element {
 										<div className="absolute h-40 w-40 -rotate-12 skew-y-6 rounded-full border-2 border-zinc-400/40 md:h-56 md:w-56" />
 
 										<div className="neomorphic relative flex h-24 w-24 items-center justify-center rounded-2xl bg-[#121212] p-4 md:h-32 md:w-32 md:p-6">
-											<img
-												src="/fensory_logo.svg"
-												alt="Fensory"
+									<img
+										src="/cipher_logo_dark.svg"
+										alt="Cipher"
 												className="h-auto w-full brightness-0 invert"
 												style={{ filter: "brightness(0) invert(1)" }}
 											/>
@@ -223,18 +163,26 @@ export default function Page(): React.JSX.Element {
 
 					{/* Input Section */}
 					<div className="relative w-full">
-						{!isLoaded && <ModelLoaderCard progress={progress} onLoadModel={loadModel} />}
+						{!isLoaded && (
+							<ModelLoaderCard
+								progress={progress}
+								onLoadModel={loadModel}
+								error={error}
+							/>
+						)}
 
 						<ExampleButtons
-							isDisabled={!isLoaded}
+							isDisabled={!isLoaded || isTyping}
 							onExampleClick={handleExampleClick}
 						/>
 
 						<ChatInput
 							value={input}
 							isDisabled={!isLoaded}
+							isGenerating={isTyping}
 							onChange={setInput}
 							onSubmit={handleSend}
+							onStop={stopGenerating}
 						/>
 					</div>
 				</div>

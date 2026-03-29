@@ -24,6 +24,16 @@ Run the development server:
 bun dev
 ```
 
+Configure local model selection (optional):
+
+```bash
+export NEXT_PUBLIC_WEBLLM_MODEL="Llama-3.2-1B-Instruct-q4f16_1-MLC"
+export NEXT_PUBLIC_WEBLLM_MAX_TOKENS="256" # optional output limiter
+```
+
+The first model load downloads weights in-browser and may take a while.
+Use a Chromium-based browser with WebGPU enabled for best results.
+
 Build for production:
 
 ```bash
