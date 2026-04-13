@@ -1,8 +1,8 @@
-"use client"
-import { cn } from "@/lib/utils"
-import type { HTMLAttributes } from "react"
-import { forwardRef, useMemo } from "react"
-import { ShaderCanvas } from "./shader-canvas"
+'use client';
+import { cn } from '@/lib/utils';
+import type { HTMLAttributes } from 'react';
+import { forwardRef, useMemo } from 'react';
+import { ShaderCanvas } from './shader-canvas';
 
 // Fragment Shader Code
 const FRAGMENT_SHADER_CODE = `
@@ -363,47 +363,38 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ){
 
     fragColor = vec4(sqrt(clamp(col, 0., 1.)), 1);
 }
-`
+`;
 
-export interface DesertSandShaderProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
-	readonly speed?: number
-	readonly sandDetail?: number
-	readonly bumpIntensity?: number
-	readonly mistIntensity?: number
+export interface DesertSandShaderProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'> {
+  readonly speed?: number;
+  readonly sandDetail?: number;
+  readonly bumpIntensity?: number;
+  readonly mistIntensity?: number;
 }
 
-export const DesertSandShader = forwardRef<
-	HTMLDivElement,
-	DesertSandShaderProps
->(({
-	className,
-	speed = 1.0,
-	sandDetail = 1.0,
-	bumpIntensity = 1.0,
-	mistIntensity = 1.0,
-	...props
-}, ref) => {
-	// Memoize uniforms to prevent unnecessary shader updates
-	const uniforms = useMemo(
-		() => ({
-			u_speed: { type: "1f" as const, value: speed },
-			u_sandDetail: { type: "1f" as const, value: sandDetail },
-			u_bumpIntensity: { type: "1f" as const, value: bumpIntensity },
-			u_mistIntensity: { type: "1f" as const, value: mistIntensity },
-		}),
-		[speed, sandDetail, bumpIntensity, mistIntensity],
-	)
+export const DesertSandShader = forwardRef<HTMLDivElement, DesertSandShaderProps>(
+  ({ className, speed = 1.0, sandDetail = 1.0, bumpIntensity = 1.0, mistIntensity = 1.0, ...props }, ref) => {
+    // Memoize uniforms to prevent unnecessary shader updates
+    const uniforms = useMemo(
+      () => ({
+        u_speed: { type: '1f' as const, value: speed },
+        u_sandDetail: { type: '1f' as const, value: sandDetail },
+        u_bumpIntensity: { type: '1f' as const, value: bumpIntensity },
+        u_mistIntensity: { type: '1f' as const, value: mistIntensity }
+      }),
+      [speed, sandDetail, bumpIntensity, mistIntensity]
+    );
 
-	return (
-		<div className={cn("h-full w-full", className)} ref={ref} {...props}>
-			<ShaderCanvas
-				fragmentShader={FRAGMENT_SHADER_CODE}
-				style={{ width: "100%", height: "100%" }}
-				className="block h-full w-full"
-				uniforms={uniforms}
-			/>
-		</div>
-	)
-})
+    return (
+      <div className={cn('h-full w-full', className)} ref={ref} {...props}>
+        <ShaderCanvas
+          fragmentShader={FRAGMENT_SHADER_CODE}
+          style={{ width: '100%', height: '100%' }}
+          className='block h-full w-full'
+          uniforms={uniforms} />
+      </div>
+    );
+  }
+);
 
-DesertSandShader.displayName = "DesertSandShader"
+DesertSandShader.displayName = 'DesertSandShader';

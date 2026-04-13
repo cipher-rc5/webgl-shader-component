@@ -1,46 +1,39 @@
-import type { ModelLoadingState } from "@/types"
-import { loadWebLLMModel } from "@/lib/services/web-llm.service"
-import { useState } from "react"
+import { loadWebLLMModel } from '@/lib/services/web-llm.service';
+import type { ModelLoadingState } from '@/types';
+import { Effect } from 'effect';
+import { useState } from 'react';
 
 interface UseModelLoaderReturn extends ModelLoadingState {
-	readonly loadModel: () => void
-	readonly error: string | null
+  readonly loadModel: () => void;
+  readonly error: string | null;
 }
 
-/**
- * Custom hook for managing model loading state
- * Follows Single Responsibility Principle - only handles model loading
- */
 export function useModelLoader(): UseModelLoaderReturn {
-	const [isLoaded, setIsLoaded] = useState<boolean>(false)
-	const [progress, setProgress] = useState<number>(0)
-	const [error, setError] = useState<string | null>(null)
+  const [isLoaded, setIsLoaded] = useState<boolean>(false);
+  const [progress, setProgress] = useState<number>(0);
+  const [error, setError] = useState<string | null>(null);
 
-	const loadModel = (): void => {
-		if (isLoaded) return
+  const loadModel = (): void => {
+    if (isLoaded) return;
+    setError(null);
+    setProgress(1);
 
-		setError(null)
-		setProgress(1)
+    Effect.runFork(
+      loadWebLLMModel(setProgress).pipe(
+        Effect.andThen(Effect.sync(() => setIsLoaded(true))),
+        Effect.catchTag('WebGPUUnavailableError', () =>
+          Effect.sync(() => {
+            setProgress(0);
+            setError('WebGPU is not available in this browser.');
+          })),
+        Effect.catchTag('ModelLoadError', () =>
+          Effect.sync(() => {
+            setProgress(0);
+            setError('Failed to initialize local model.');
+          }))
+      )
+    );
+  };
 
-		void (async () => {
-			try {
-				await loadWebLLMModel(setProgress)
-				setIsLoaded(true)
-			} catch (err) {
-				setProgress(0)
-				const message =
-					err instanceof Error ?
-						err.message
-					: 	"Failed to initialize local model."
-				setError(message)
-			}
-		})()
-	}
-
-	return {
-		isLoaded,
-		progress,
-		loadModel,
-		error,
-	}
+  return { isLoaded, progress, loadModel, error };
 }
