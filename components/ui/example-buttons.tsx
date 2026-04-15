@@ -6,7 +6,7 @@ interface ExampleButtonsProps {
   readonly onExampleClick: (example: string) => void;
 }
 
-const EXAMPLES = ["What's the latest news?", 'Help me with research', 'Tell me about Augustus'] as const;
+const EXAMPLES = ["What's the latest news?", 'Help me with research'] as const;
 
 /**
  * Example Buttons Component

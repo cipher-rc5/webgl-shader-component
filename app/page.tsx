@@ -74,7 +74,9 @@ export default function Page(): React.JSX.Element {
         {/* Past Searches */}
         <div className='flex-1 overflow-hidden'>
           <h3 className='mb-3 px-2 text-xs font-semibold uppercase tracking-wider text-zinc-700'>Recent Chats</h3>
-          <div className='custom-scrollbar space-y-2 overflow-y-auto pr-1 pb-4' style={{ maxHeight: 'calc(100vh - 200px)' }}>
+          <div
+            className='custom-scrollbar space-y-2 overflow-y-auto pr-1 pb-4'
+            style={{ maxHeight: 'calc(100vh - 200px)' }}>
             {chatSessions.map((session) => {
               const isEditing = editingSessionId === session.id;
 
