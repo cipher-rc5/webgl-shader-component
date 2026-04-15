@@ -53,9 +53,9 @@ export default function Page(): React.JSX.Element {
   return (
     <div className='flex h-screen w-full overflow-hidden bg-[#e8e8e8] font-sans text-zinc-900 selection:bg-[#F4D03F]/30'>
       {/* Sidebar with Past Searches */}
-      <aside className='z-20 flex w-64 flex-col gap-4 bg-[#e8e8e8] p-4'>
+      <aside className='z-20 flex w-64 flex-col gap-4 bg-[#e8e8e8] px-4 pt-4 pb-8 md:pb-10'>
         {/* Logo */}
-        <div className='neomorphic mb-2 flex items-center justify-center rounded-2xl bg-[#121212] p-4'>
+        <div className='neomorphic neomorphic-dark mb-2 flex items-center justify-center rounded-2xl p-4'>
           <img
             src='/cipher_logo_dark.svg'
             alt='Cipher'
@@ -66,15 +66,15 @@ export default function Page(): React.JSX.Element {
         {/* New Chat Button */}
         <button
           onClick={startNewChat}
-          className='neomorphic neomorphic-hover flex items-center gap-3 rounded-2xl p-4 text-sm font-medium text-zinc-700 transition-all active:scale-95'>
+          className='neomorphic neomorphic-hover flex items-center gap-3 rounded-2xl p-4 text-sm font-semibold text-zinc-800 transition-all active:scale-95'>
           <Plus size={18} />
           <span>New Chat</span>
         </button>
 
         {/* Past Searches */}
         <div className='flex-1 overflow-hidden'>
-          <h3 className='mb-3 px-2 text-xs font-semibold uppercase tracking-wider text-zinc-500'>Recent Chats</h3>
-          <div className='custom-scrollbar space-y-2 overflow-y-auto pr-1' style={{ maxHeight: 'calc(100vh - 200px)' }}>
+          <h3 className='mb-3 px-2 text-xs font-semibold uppercase tracking-wider text-zinc-700'>Recent Chats</h3>
+          <div className='custom-scrollbar space-y-2 overflow-y-auto pr-1 pb-4' style={{ maxHeight: 'calc(100vh - 200px)' }}>
             {chatSessions.map((session) => {
               const isEditing = editingSessionId === session.id;
 
@@ -98,10 +98,10 @@ export default function Page(): React.JSX.Element {
                 <div
                   key={session.id}
                   className={cn(
-                    'group w-full rounded-xl p-3 text-left text-sm transition-all',
+                    'group w-full rounded-xl border p-3 text-left text-sm transition-all',
                     currentSessionId === session.id ?
-                      'neomorphic-inset text-zinc-900' :
-                      'neomorphic neomorphic-hover text-zinc-700'
+                      'neomorphic-inset border-zinc-300/90 text-zinc-950' :
+                      'neomorphic neomorphic-hover border-zinc-200/80 text-zinc-800'
                   )}>
                   {isEditing ?
                     (
@@ -112,7 +112,7 @@ export default function Page(): React.JSX.Element {
                         onChange={(e) => setEditingTitle(e.target.value)}
                         onBlur={commitRename}
                         onKeyDown={handleKeyDown}
-                        className='w-full bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400' />
+                        className='w-full bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-500' />
                     ) :
                     (
                       <button
@@ -178,7 +178,7 @@ export default function Page(): React.JSX.Element {
                     <div className='absolute h-36 w-36 skew-x-12 rotate-45 rounded-full border-4 border-zinc-300/50 blur-[1px] md:h-48 md:w-48 md:border-[6px]' />
                     <div className='absolute h-40 w-40 -rotate-12 skew-y-6 rounded-full border-2 border-zinc-400/40 md:h-56 md:w-56' />
 
-                    <div className='neomorphic relative flex h-24 w-24 items-center justify-center rounded-2xl bg-[#121212] p-4 md:h-32 md:w-32 md:p-6'>
+                    <div className='neomorphic neomorphic-dark relative flex h-24 w-24 items-center justify-center rounded-2xl p-4 md:h-32 md:w-32 md:p-6'>
                       <img
                         src='/cipher_logo_dark.svg'
                         alt='Cipher'
