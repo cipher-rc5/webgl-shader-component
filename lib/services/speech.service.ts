@@ -47,6 +47,8 @@ export const createSpeechStream = (
       let base = baseValue;
 
       return Stream.async<string, SpeechRecognitionError>((emit) => {
+        let aborted = false;
+
         recognition.onresult = (event: SpeechRecognitionEvent) => {
           let finalTranscript = '';
           let interimTranscript = '';
@@ -65,16 +67,40 @@ export const createSpeechStream = (
           if (finalTranscript) base += finalTranscript;
         };
 
-        recognition.onerror = (event: Event) => {
-          emit.fail(new SpeechRecognitionError({ cause: event }));
+        // Errors that mean the mic is gone — no point restarting
+        const FATAL_ERRORS = new Set(['audio-capture', 'not-allowed', 'service-not-allowed', 'language-not-supported']);
+
+        recognition.onerror = (event: Event & { error?: string }) => {
+          const err = event.error ?? '';
+          // 'aborted' → intentional stop; 'no-speech' → silence timeout, onend will restart
+          if (!err || err === 'aborted' || err === 'no-speech') return;
+          if (FATAL_ERRORS.has(err)) {
+            aborted = true; // prevent onend from trying to restart
+            emit.fail(new SpeechRecognitionError({ cause: event }));
+          }
+          // non-fatal unknown errors: let onend handle the restart
         };
 
-        recognition.onend = () => emit.end();
+        recognition.onend = () => {
+          if (aborted) {
+            emit.end();
+            return;
+          }
+          // Browser closed the session (silence timeout, etc.) — restart to stay open
+          try {
+            recognition.start();
+          } catch {
+            emit.end();
+          }
+        };
 
         recognition.start();
 
         // Runs when the fiber is interrupted, stopping the recognition session
-        return Effect.sync(() => recognition.abort());
+        return Effect.sync(() => {
+          aborted = true;
+          recognition.abort();
+        });
       });
     })
   );
