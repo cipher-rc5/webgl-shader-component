@@ -34,6 +34,6 @@
     "dprint": "0.54.0",
     "postcss": "8.5.10",
     "tailwindcss": "4.2.2",
-    "typescript": "6.0.2"
+    "typescript": "6.0.3"
   }
 }
