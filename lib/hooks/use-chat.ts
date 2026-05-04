@@ -98,9 +98,7 @@ export function useChat(): UseChatReturn {
   };
 
   const renameSession = (sessionId: string, title: string): void => {
-    setChatSessions((prev) =>
-      prev.map((s) => s.id === sessionId ? { ...s, title: title.trim() || s.title } : s)
-    );
+    setChatSessions((prev) => prev.map((s) => s.id === sessionId ? { ...s, title: title.trim() || s.title } : s));
   };
 
   return {
