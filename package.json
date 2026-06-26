@@ -35,5 +35,12 @@
     "postcss": "8.5.15",
     "tailwindcss": "4.3.1",
     "typescript": "6.0.3"
+  },
+  "overrides": {
+    "dompurify": "3.4.11",
+    "mermaid": "11.16.0",
+    "postcss": "8.5.15",
+    "undici": "7.28.0",
+    "uuid": "11.1.1"
   }
 }
