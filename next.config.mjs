@@ -3,7 +3,6 @@ const nextConfig = {
   typescript: { ignoreBuildErrors: false },
   images: { unoptimized: false },
   cacheComponents: true,
-  reactCompiler: true,
   experimental: {
     optimizePackageImports: [
       'lucide-react',
