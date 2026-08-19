@@ -32,7 +32,9 @@ export default function Page(): React.JSX.Element {
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Auto-scroll to bottom of chat
+  // Auto-scroll to bottom of chat.
+  // messages/isTyping are intentional re-run triggers, not values read in the body.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll must fire when either changes
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);

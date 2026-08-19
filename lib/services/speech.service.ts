@@ -3,11 +3,34 @@
 import { Effect, Stream } from 'effect';
 import { SpeechNotSupportedError, SpeechRecognitionError } from '@/lib/errors';
 
+// The Web Speech API types are not present in every TypeScript DOM lib version,
+// so the small surface this module actually uses is declared locally. This keeps
+// the file self-contained across editors and TypeScript releases.
+interface SpeechRecognitionAlternativeLike {
+  readonly transcript: string;
+}
+
+interface SpeechRecognitionResultLike {
+  readonly isFinal: boolean;
+  readonly length: number;
+  readonly [index: number]: SpeechRecognitionAlternativeLike | undefined;
+}
+
+interface SpeechRecognitionResultListLike {
+  readonly length: number;
+  readonly [index: number]: SpeechRecognitionResultLike | undefined;
+}
+
+interface SpeechRecognitionEventLike {
+  readonly resultIndex: number;
+  readonly results: SpeechRecognitionResultListLike;
+}
+
 interface SpeechRecognitionInstance {
   continuous: boolean;
   interimResults: boolean;
   lang: string;
-  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
   onend: (() => void) | null;
   onerror: ((event: Event) => void) | null;
   start(): void;
@@ -46,7 +69,7 @@ export const createSpeechStream = (
       return Stream.async<string, SpeechRecognitionError>((emit) => {
         let aborted = false;
 
-        recognition.onresult = (event: SpeechRecognitionEvent) => {
+        recognition.onresult = (event: SpeechRecognitionEventLike) => {
           let finalTranscript = '';
           let interimTranscript = '';
 

@@ -147,6 +147,9 @@ export function ShaderCanvas({ fragmentShader, uniforms, style, className }: Sha
     };
   };
 
+  // renderShader is deliberately omitted: it is redefined every render, so
+  // depending on it would tear down and rebuild the WebGL context each time.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-init only on shader/uniform changes
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;

@@ -14,7 +14,9 @@
       "!**/bun.lock",
       "!next-env.d.ts",
       "!**/*.tsbuildinfo",
-      "!**/public/"
+      "!**/public/",
+      "!**/.claude/",
+      "!**/.agents/"
     ]
   },
   "formatter": {

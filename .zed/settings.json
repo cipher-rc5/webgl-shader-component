@@ -1,0 +1,40 @@
+{
+  "//": "TypeScript 7 ships a compiler only (no tsserver.js), so Zed's bundled TS server provides editor diagnostics while `bun run typecheck` remains the source of truth.",
+  "languages": {
+    "TypeScript": {
+      "language_servers": ["biome", "!vtsls", "typescript-language-server"],
+      "formatter": { "language_server": { "name": "biome" } },
+      "format_on_save": "on",
+      "code_actions_on_format": { "source.organizeImports.biome": true }
+    },
+    "TSX": {
+      "language_servers": ["biome", "!vtsls", "typescript-language-server"],
+      "formatter": { "language_server": { "name": "biome" } },
+      "format_on_save": "on",
+      "code_actions_on_format": { "source.organizeImports.biome": true }
+    },
+    "JavaScript": {
+      "language_servers": ["biome", "!vtsls", "typescript-language-server"],
+      "formatter": { "language_server": { "name": "biome" } },
+      "format_on_save": "on"
+    },
+    "JSON": {
+      "language_servers": ["biome"],
+      "formatter": { "language_server": { "name": "biome" } },
+      "format_on_save": "on"
+    },
+    "JSONC": {
+      "language_servers": ["biome"],
+      "formatter": { "language_server": { "name": "biome" } },
+      "format_on_save": "on"
+    },
+    "CSS": {
+      "formatter": { "language_server": { "name": "biome" } },
+      "format_on_save": "on"
+    }
+  },
+  "lsp": {
+    "biome": { "settings": { "require_config_file": true } }
+  },
+  "file_scan_exclusions": ["**/.git", "**/node_modules", "**/.next", "**/*.tsbuildinfo"]
+}
