@@ -1,5 +1,5 @@
 [install]
-# Use exact versions for production stability
+# Allow semver ranges to resolve to newest matching release
 exact = false
 
 # Enable optional peer dependencies
@@ -13,14 +13,13 @@ production = false
 # Enable package caching
 disable = false
 
-[test]
-# Use Bun's native test runner
-preload = ["./test/setup.ts"]
-
 [run]
-# Enable hot module replacement
-hot = true
-
-# Shell configuration
-shell = "bun"
+# Run package.json scripts and shebangs with Bun instead of Node
 bun = true
+
+# Use Bun's built-in shell for script execution
+shell = "bun"
+
+[test]
+# Register a DOM implementation before React Testing Library loads
+preload = ["./test/setup.ts"]

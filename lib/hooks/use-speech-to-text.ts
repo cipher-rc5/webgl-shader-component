@@ -1,8 +1,8 @@
 'use client';
 
-import { createSpeechStream } from '@/lib/services/speech.service';
 import { Effect, Fiber, Stream } from 'effect';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createSpeechStream } from '@/lib/services/speech.service';
 
 interface UseSpeechToTextOptions {
   readonly value: string;
@@ -24,8 +24,12 @@ export function useSpeechToText({ value, onChange }: UseSpeechToTextOptions): Us
   // Stable refs so callbacks in Effects don't capture stale closures
   const onChangeRef = useRef(onChange);
   const valueRef = useRef(value);
-  useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
-  useEffect(() => { valueRef.current = value; }, [value]);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
 
   // Resolved after mount so SSR and client initial render agree (no hydration mismatch)
   useEffect(() => {

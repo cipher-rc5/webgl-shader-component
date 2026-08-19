@@ -1,10 +1,10 @@
-import { ModelLoadError, ModelNotLoadedError, StreamError, WebGPUUnavailableError } from '@/lib/errors';
-import type { Message } from '@/types';
 import type { ChatCompletionChunk, ChatCompletionMessageParam, MLCEngineInterface } from '@mlc-ai/web-llm';
 import { Effect, Option, Stream } from 'effect';
+import { ModelLoadError, ModelNotLoadedError, StreamError, WebGPUUnavailableError } from '@/lib/errors';
+import type { Message } from '@/types';
 
-const DEFAULT_WEB_LLM_MODEL = process.env.NEXT_PUBLIC_WEBLLM_MODEL ?? 'Llama-3.2-1B-Instruct-q4f16_1-MLC';
-const DEFAULT_MAX_TOKENS = Number.parseInt(process.env.NEXT_PUBLIC_WEBLLM_MAX_TOKENS ?? '256', 10) || 256;
+const DEFAULT_WEB_LLM_MODEL = process.env['NEXT_PUBLIC_WEBLLM_MODEL'] ?? 'Llama-3.2-1B-Instruct-q4f16_1-MLC';
+const DEFAULT_MAX_TOKENS = Number.parseInt(process.env['NEXT_PUBLIC_WEBLLM_MAX_TOKENS'] ?? '256', 10) || 256;
 
 let engine: MLCEngineInterface | null = null;
 let enginePromise: Promise<MLCEngineInterface> | null = null;
@@ -27,7 +27,7 @@ const checkWebGPU: Effect.Effect<void, WebGPUUnavailableError> =
 export const loadWebLLMModel = (
   reportProgress: (n: number) => void
 ): Effect.Effect<void, WebGPUUnavailableError | ModelLoadError> =>
-  Effect.gen(function*() {
+  Effect.gen(function* () {
     yield* checkWebGPU;
     if (engine) {
       reportProgress(100);
@@ -41,28 +41,30 @@ export const loadWebLLMModel = (
         });
       })();
     }
-    engine = yield* Effect.tryPromise({ try: () => enginePromise!, catch: (e) => new ModelLoadError({ cause: e }) });
+    const pendingEngine = enginePromise;
+    engine = yield* Effect.tryPromise({ try: () => pendingEngine, catch: (e) => new ModelLoadError({ cause: e }) });
     reportProgress(100);
   });
 
 export const streamWebLLMResponse = (
   conversation: readonly Message[]
 ): Stream.Stream<string, ModelNotLoadedError | StreamError> => {
-  if (!engine) return Stream.fail(new ModelNotLoadedError());
+  const activeEngine = engine;
+  if (!activeEngine) return Stream.fail(new ModelNotLoadedError());
 
   return Stream.unwrap(
     Effect.tryPromise({
       try: () =>
-        engine!.chat.completions.create({
+        activeEngine.chat.completions.create({
           messages: toConversationMessages(conversation),
           temperature: 0.7,
           max_tokens: DEFAULT_MAX_TOKENS,
           stream: true
         }) as Promise<AsyncIterable<ChatCompletionChunk>>,
       catch: (e) => new StreamError({ cause: e })
-    }).pipe(Effect.map((chunks) =>
-      Stream.fromAsyncIterable(chunks, (e) =>
-        new StreamError({ cause: e })).pipe(
+    }).pipe(
+      Effect.map((chunks) =>
+        Stream.fromAsyncIterable(chunks, (e) => new StreamError({ cause: e })).pipe(
           Stream.filter((chunk) => chunk.choices[0]?.finish_reason !== 'abort'),
           Stream.filterMap((chunk) => {
             const delta = chunk.choices[0]?.delta.content ?? '';
@@ -73,7 +75,8 @@ export const streamWebLLMResponse = (
             return [next, next];
           })
         )
-    ))
+      )
+    )
   );
 };
 

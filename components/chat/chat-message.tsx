@@ -1,9 +1,9 @@
 'use client';
 
-import { cn } from '@/lib/utils';
-import type { Message } from '@/types';
 import dynamic from 'next/dynamic';
 import type { JSX } from 'react';
+import { cn } from '@/lib/utils';
+import type { Message } from '@/types';
 
 const MarkdownMessage = dynamic(() => import('./markdown-message').then((m) => m.MarkdownMessage), { ssr: false });
 

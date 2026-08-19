@@ -1,7 +1,7 @@
-import { loadWebLLMModel } from '@/lib/services/web-llm.service';
-import type { ModelLoadingState } from '@/types';
 import { Effect } from 'effect';
 import { useState } from 'react';
+import { loadWebLLMModel } from '@/lib/services/web-llm.service';
+import type { ModelLoadingState } from '@/types';
 
 interface UseModelLoaderReturn extends ModelLoadingState {
   readonly loadModel: () => void;
@@ -25,12 +25,14 @@ export function useModelLoader(): UseModelLoaderReturn {
           Effect.sync(() => {
             setProgress(0);
             setError('WebGPU is not available in this browser.');
-          })),
+          })
+        ),
         Effect.catchTag('ModelLoadError', () =>
           Effect.sync(() => {
             setProgress(0);
             setError('Failed to initialize local model.');
-          }))
+          })
+        )
       )
     );
   };

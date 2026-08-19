@@ -1,7 +1,6 @@
 'use client';
-import type { CSSProperties } from 'react';
+import type { CSSProperties, JSX } from 'react'; // Declare JSX variable
 import { useEffect, useRef } from 'react';
-import type { JSX } from 'react'; // Declare JSX variable
 
 interface ShaderUniform {
   readonly type: '1f';
@@ -9,7 +8,10 @@ interface ShaderUniform {
 }
 
 interface ShaderUniforms {
-  readonly [key: string]: ShaderUniform;
+  readonly u_speed?: ShaderUniform;
+  readonly u_sandDetail?: ShaderUniform;
+  readonly u_bumpIntensity?: ShaderUniform;
+  readonly u_mistIntensity?: ShaderUniform;
 }
 
 interface ShaderCanvasProps {
@@ -22,7 +24,7 @@ interface ShaderCanvasProps {
 export function ShaderCanvas({ fragmentShader, uniforms, style, className }: ShaderCanvasProps): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const renderShader = (gl: WebGLRenderingContext): () => void => {
+  const renderShader = (gl: WebGLRenderingContext): (() => void) => {
     // Standard Vertex Shader
     const vsSource = `
 							attribute vec2 position;

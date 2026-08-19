@@ -22,28 +22,27 @@ export function ModelLoaderCard({ progress, onLoadModel, error }: ModelLoaderCar
 
         {error && <p className='mb-4 rounded-xl bg-red-100 px-3 py-2 text-xs text-red-700'>{error}</p>}
 
-        {isLoading ?
-          (
-            <div className='w-full space-y-2'>
-              <div className='neomorphic-inset h-3 w-full overflow-hidden rounded-full'>
-                <div
-                  className='h-full rounded-full bg-linear-to-r from-[#F4D03F] to-[#D4AF37] transition-all duration-300'
-                  style={{ width: `${progress}%` }} />
-              </div>
-              <p className='font-mono text-xs text-zinc-500'>Loading shards... {progress}%</p>
+        {isLoading ? (
+          <div className='w-full space-y-2'>
+            <div className='neomorphic-inset h-3 w-full overflow-hidden rounded-full'>
+              <div
+                className='h-full rounded-full bg-linear-to-r from-[#F4D03F] to-[#D4AF37] transition-all duration-300'
+                style={{ width: `${progress}%` }}
+              />
             </div>
-          ) :
-          (
-            <div className='flex justify-center'>
-              <button
-                type='button'
-                onClick={onLoadModel}
-                className='neomorphic neomorphic-hover flex items-center gap-2 rounded-full px-8 py-3 text-sm font-medium text-zinc-800 transition-all active:scale-95'>
-                <Cpu size={18} />
-                <span>Load Local Model</span>
-              </button>
-            </div>
-          )}
+            <p className='font-mono text-xs text-zinc-500'>Loading shards... {progress}%</p>
+          </div>
+        ) : (
+          <div className='flex justify-center'>
+            <button
+              type='button'
+              onClick={onLoadModel}
+              className='neomorphic neomorphic-hover flex items-center gap-2 rounded-full px-8 py-3 text-sm font-medium text-zinc-800 transition-all active:scale-95'>
+              <Cpu size={18} />
+              <span>Load Local Model</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

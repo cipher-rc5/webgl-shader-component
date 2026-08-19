@@ -28,3 +28,6 @@ next-env.d.ts
 
 pnpm-lock.yaml
 bun.lock
+
+# macOS
+.DS_Store

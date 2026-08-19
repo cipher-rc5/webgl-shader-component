@@ -1,11 +1,12 @@
-import { cn } from '@/lib/utils';
 import type { JSX } from 'react';
+import { cn } from '@/lib/utils';
 
 interface ExampleButtonsProps {
   readonly isDisabled: boolean;
   readonly onExampleClick: (example: string) => void;
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: retained for the commented-out example buttons below
 const EXAMPLES = ["What's the latest news?", 'Help me with research'] as const;
 
 /**
@@ -19,8 +20,7 @@ export function ExampleButtons({ isDisabled }: ExampleButtonsProps): JSX.Element
         'mb-4 flex flex-wrap justify-center gap-3 transition-all duration-500',
         isDisabled && 'pointer-events-none opacity-50'
       )}>
-      {
-        /* {EXAMPLES.map((example) => (
+      {/* {EXAMPLES.map((example) => (
         <button
           key={example}
           type='button'
@@ -30,8 +30,7 @@ export function ExampleButtons({ isDisabled }: ExampleButtonsProps): JSX.Element
           {example.replace("What's the latest news?", 'Latest News').replace('Help me with research', 'Research')
             .replace('Tell me about Augustus', 'Augustus')}
         </button>
-      ))} */
-      }
+      ))} */}
     </div>
   );
 }

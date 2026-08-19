@@ -1,10 +1,7 @@
-import type { Metadata } from 'next';
-import React from 'react';
-
 import { Analytics } from '@vercel/analytics/next';
+import type { Metadata } from 'next';
+import type React from 'react';
 import './globals.css';
-
-import { QueryProvider } from '@/components/providers/query-provider';
 
 import { Geist, Geist_Mono, Source_Serif_4 } from 'next/font/google';
 
@@ -35,10 +32,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang='en' suppressHydrationWarning>
       <body className={`${geist.variable} ${geistMono.variable} ${sourceSerif4.variable} font-sans antialiased`}>
-        <QueryProvider>
-          {children}
-          <Analytics />
-        </QueryProvider>
+        {children}
+        <Analytics />
       </body>
     </html>
   );

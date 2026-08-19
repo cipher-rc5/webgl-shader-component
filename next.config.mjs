@@ -3,15 +3,7 @@ const nextConfig = {
   typescript: { ignoreBuildErrors: false },
   images: { unoptimized: false },
   cacheComponents: true,
-  experimental: {
-    optimizePackageImports: [
-      'lucide-react',
-      '@radix-ui/react-dialog',
-      '@radix-ui/react-label',
-      '@radix-ui/react-separator',
-      '@radix-ui/react-slot'
-    ]
-  },
+  experimental: { optimizePackageImports: ['lucide-react'] },
   compiler: { removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false }
 };
 

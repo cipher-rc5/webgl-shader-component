@@ -1,7 +1,7 @@
 'use client';
-import { cn } from '@/lib/utils';
 import type { HTMLAttributes } from 'react';
 import { forwardRef, useMemo } from 'react';
+import { cn } from '@/lib/utils';
 import { ShaderCanvas } from './shader-canvas';
 
 // Fragment Shader Code
@@ -391,7 +391,8 @@ export const DesertSandShader = forwardRef<HTMLDivElement, DesertSandShaderProps
           fragmentShader={FRAGMENT_SHADER_CODE}
           style={{ width: '100%', height: '100%' }}
           className='block h-full w-full'
-          uniforms={uniforms} />
+          uniforms={uniforms}
+        />
       </div>
     );
   }

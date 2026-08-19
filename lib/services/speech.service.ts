@@ -1,7 +1,7 @@
 'use client';
 
-import { SpeechNotSupportedError, SpeechRecognitionError } from '@/lib/errors';
 import { Effect, Stream } from 'effect';
+import { SpeechNotSupportedError, SpeechRecognitionError } from '@/lib/errors';
 
 interface SpeechRecognitionInstance {
   continuous: boolean;
@@ -22,12 +22,9 @@ declare global {
   }
 }
 
-const acquireSpeechRecognition: Effect.Effect<SpeechRecognitionInstance, SpeechNotSupportedError> =
-  Effect.sync(() => window.SpeechRecognition ?? window.webkitSpeechRecognition).pipe(
-    Effect.flatMap((SR) =>
-      SR ? Effect.succeed(new SR()) : Effect.fail(new SpeechNotSupportedError())
-    )
-  );
+const acquireSpeechRecognition: Effect.Effect<SpeechRecognitionInstance, SpeechNotSupportedError> = Effect.sync(
+  () => window.SpeechRecognition ?? window.webkitSpeechRecognition
+).pipe(Effect.flatMap((SR) => (SR ? Effect.succeed(new SR()) : Effect.fail(new SpeechNotSupportedError()))));
 
 /**
  * Returns a Stream of accumulated transcript strings.
@@ -54,8 +51,10 @@ export const createSpeechStream = (
           let interimTranscript = '';
 
           for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0].transcript ?? '';
-            if (event.results[i].isFinal) {
+            const result = event.results[i];
+            if (!result) continue;
+            const transcript = result[0]?.transcript ?? '';
+            if (result.isFinal) {
               finalTranscript += transcript;
             } else {
               interimTranscript += transcript;

@@ -1,7 +1,7 @@
-import { interruptWebLLMGeneration, streamWebLLMResponse } from '@/lib/services/web-llm.service';
-import type { ChatSession, Message } from '@/types';
 import { Effect, Fiber, Stream } from 'effect';
 import { useRef, useState } from 'react';
+import { interruptWebLLMGeneration, streamWebLLMResponse } from '@/lib/services/web-llm.service';
+import type { ChatSession, Message } from '@/types';
 
 interface UseChatReturn {
   readonly messages: readonly Message[];
@@ -25,14 +25,42 @@ export function useChat(): UseChatReturn {
   const [currentSessionId, setCurrentSessionId] = useState<string>('');
   const fiberRef = useRef<Fiber.RuntimeFiber<void, never> | null>(null);
 
-  const updateLastAssistantMessage = (content: string): void => {
+  // The session a stream is writing into. Guards against a late chunk from a
+  // previous conversation landing in whichever chat the user switched to.
+  const streamingSessionIdRef = useRef<string>('');
+
+  /** Mirror the live transcript into its owning session so switching away preserves it. */
+  const persistMessages = (sessionId: string, next: readonly Message[]): void => {
+    if (!sessionId) return;
+    setChatSessions((prev) => prev.map((s) => (s.id === sessionId ? { ...s, messages: next } : s)));
+  };
+
+  const updateLastAssistantMessage = (sessionId: string, content: string): void => {
+    if (streamingSessionIdRef.current !== sessionId) return;
+
     setMessages((prev) => {
-      if (prev.length === 0) return [{ role: 'assistant', content }];
-      const next = [...prev];
-      const last = next.length - 1;
-      if (next[last]?.role === 'assistant') next[last] = { role: 'assistant', content };
+      const next =
+        prev.length === 0
+          ? ([{ role: 'assistant', content }] as const satisfies readonly Message[])
+          : (() => {
+              const draft = [...prev];
+              const last = draft.length - 1;
+              if (draft[last]?.role === 'assistant') draft[last] = { role: 'assistant', content };
+              return draft;
+            })();
+
+      persistMessages(sessionId, next);
       return next;
     });
+  };
+
+  const interruptActiveStream = (): void => {
+    interruptWebLLMGeneration();
+    if (fiberRef.current) {
+      Effect.runFork(Fiber.interrupt(fiberRef.current));
+      fiberRef.current = null;
+    }
+    streamingSessionIdRef.current = '';
   };
 
   const sendMessage = (userInput: string): void => {
@@ -40,31 +68,48 @@ export function useChat(): UseChatReturn {
 
     const userMsg: Message = { role: 'user', content: userInput };
     const conversation = [...messages, userMsg];
+    const nextMessages: readonly Message[] = [...conversation, { role: 'assistant', content: '' }];
 
-    if (messages.length === 0) {
+    // Reuse the active session, or open one on the first message of a new chat.
+    let sessionId = currentSessionId;
+    if (!sessionId) {
+      sessionId = Date.now().toString();
       const newSession: ChatSession = {
-        id: Date.now().toString(),
+        id: sessionId,
         title: userInput.slice(0, 30) + (userInput.length > 30 ? '...' : ''),
-        timestamp: new Date()
+        timestamp: new Date(),
+        messages: nextMessages
       };
       setChatSessions((prev) => [newSession, ...prev]);
-      setCurrentSessionId(newSession.id);
+      setCurrentSessionId(sessionId);
+    } else {
+      persistMessages(sessionId, nextMessages);
     }
 
-    setMessages((prev) => [...prev, userMsg, { role: 'assistant', content: '' }]);
+    streamingSessionIdRef.current = sessionId;
+    setMessages(nextMessages);
     setInput('');
     setIsTyping(true);
 
     const program = streamWebLLMResponse(conversation).pipe(
-      Stream.tap((text: string) => Effect.sync(() => updateLastAssistantMessage(text))),
+      Stream.tap((text: string) => Effect.sync(() => updateLastAssistantMessage(sessionId, text))),
       Stream.runDrain,
       Effect.catchTag('ModelNotLoadedError', () =>
-        Effect.sync(() => updateLastAssistantMessage('Assistant is not initialized yet. Load the model first.'))),
-      Effect.catchTag('StreamError', () =>
         Effect.sync(() =>
-          updateLastAssistantMessage("I couldn't generate a response right now.")
-        )),
-      Effect.ensuring(Effect.sync(() => setIsTyping(false)))
+          updateLastAssistantMessage(sessionId, 'Assistant is not initialized yet. Load the model first.')
+        )
+      ),
+      Effect.catchTag('StreamError', () =>
+        Effect.sync(() => updateLastAssistantMessage(sessionId, "I couldn't generate a response right now."))
+      ),
+      Effect.ensuring(
+        Effect.sync(() => {
+          if (streamingSessionIdRef.current === sessionId) {
+            streamingSessionIdRef.current = '';
+            setIsTyping(false);
+          }
+        })
+      )
     );
 
     fiberRef.current = Effect.runFork(program);
@@ -72,33 +117,34 @@ export function useChat(): UseChatReturn {
 
   const stopGenerating = (): void => {
     if (!isTyping) return;
-    interruptWebLLMGeneration();
-    if (fiberRef.current) {
-      Effect.runFork(Fiber.interrupt(fiberRef.current));
-      fiberRef.current = null;
-    }
+    interruptActiveStream();
     setIsTyping(false);
   };
 
   const startNewChat = (): void => {
-    if (isTyping) {
-      interruptWebLLMGeneration();
-      if (fiberRef.current) {
-        Effect.runFork(Fiber.interrupt(fiberRef.current));
-        fiberRef.current = null;
-      }
-    }
+    if (isTyping) interruptActiveStream();
     setMessages([]);
     setIsTyping(false);
     setCurrentSessionId('');
   };
 
   const switchSession = (sessionId: string): void => {
+    if (sessionId === currentSessionId) return;
+
+    // Abandon any in-flight generation; its chunks belong to the outgoing chat.
+    if (isTyping) interruptActiveStream();
+
+    const target = chatSessions.find((s) => s.id === sessionId);
+    if (!target) return;
+
+    setIsTyping(false);
+    setInput('');
     setCurrentSessionId(sessionId);
+    setMessages(target.messages);
   };
 
   const renameSession = (sessionId: string, title: string): void => {
-    setChatSessions((prev) => prev.map((s) => s.id === sessionId ? { ...s, title: title.trim() || s.title } : s));
+    setChatSessions((prev) => prev.map((s) => (s.id === sessionId ? { ...s, title: title.trim() || s.title } : s)));
   };
 
   return {
