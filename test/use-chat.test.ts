@@ -3,15 +3,24 @@ import { act, renderHook } from '@testing-library/react';
 import { Effect, Stream } from 'effect';
 
 // Drive the stream by hand so tests control exactly when chunks arrive.
-let emit: (chunk: string) => void = () => {};
-let finish: () => void = () => {};
+// Only the most recently opened stream is addressable; each test opens its own,
+// so a leftover stream from a previous test can never receive these chunks.
+type StreamHandle = { single: (chunk: string) => void; end: () => void };
+let active: StreamHandle | null = null;
+
+const emit = (chunk: string): void => active?.single(chunk);
+const finish = (): void => {
+  active?.end();
+  active = null;
+};
 
 mock.module('@/lib/services/web-llm.service', () => ({
-  interruptWebLLMGeneration: () => {},
+  interruptWebLLMGeneration: () => {
+    active = null;
+  },
   streamWebLLMResponse: () =>
     Stream.async<string>((cb) => {
-      emit = (chunk: string) => cb.single(chunk);
-      finish = () => cb.end();
+      active = { single: (chunk: string) => cb.single(chunk), end: () => cb.end() };
       return Effect.void;
     })
 }));
@@ -20,8 +29,7 @@ const { useChat } = await import('@/lib/hooks/use-chat');
 
 describe('useChat session isolation', () => {
   beforeEach(() => {
-    emit = () => {};
-    finish = () => {};
+    active = null;
   });
 
   test('switching to a previous session restores that conversation', async () => {
@@ -103,5 +111,57 @@ describe('useChat session isolation', () => {
     expect(result.current.chatSessions).toHaveLength(1);
     expect(result.current.messages.map((m) => m.content)).toEqual(['one', 'r1', 'two', 'r2']);
     expect(result.current.chatSessions[0]?.id).toBe(only);
+  });
+  test('message ids are unique and stable across session switches', async () => {
+    const { result } = renderHook(() => useChat());
+
+    await act(async () => result.current.sendMessage('question A'));
+    await act(async () => {
+      emit('answer A');
+      finish();
+    });
+    const sessionA = result.current.currentSessionId;
+    const idsBefore = result.current.messages.map((m) => m.id);
+
+    expect(idsBefore).toHaveLength(2);
+    expect(new Set(idsBefore).size).toBe(2);
+    for (const id of idsBefore) expect(id).toBeTruthy();
+
+    await act(async () => result.current.startNewChat());
+    await act(async () => result.current.sendMessage('question B'));
+    await act(async () => {
+      emit('answer B');
+      finish();
+    });
+    const idsB = result.current.messages.map((m) => m.id);
+
+    // no id collisions across sessions
+    expect(idsB.some((id) => idsBefore.includes(id))).toBe(false);
+
+    // switching back yields the very same ids, so React keys stay stable
+    await act(async () => result.current.switchSession(sessionA));
+    expect(result.current.messages.map((m) => m.id)).toEqual(idsBefore);
+  });
+
+  test('streamed chunks land on the assistant message by id', async () => {
+    const { result } = renderHook(() => useChat());
+
+    await act(async () => result.current.sendMessage('hello'));
+    const assistantId = result.current.messages[1]?.id;
+    expect(assistantId).toBeTruthy();
+
+    await act(async () => emit('partial'));
+    expect(result.current.messages[1]?.content).toBe('partial');
+    expect(result.current.messages[1]?.id).toBe(assistantId as string);
+
+    await act(async () => {
+      emit('partial then complete');
+      finish();
+    });
+    // same message object identity by id, content replaced in place
+    expect(result.current.messages).toHaveLength(2);
+    expect(result.current.messages[1]?.id).toBe(assistantId as string);
+    expect(result.current.messages[1]?.content).toBe('partial then complete');
+    expect(result.current.messages[0]?.role).toBe('user');
   });
 });

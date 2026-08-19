@@ -160,8 +160,7 @@ export default function Page(): React.JSX.Element {
                   <div className='space-y-6'>
                     {messages.map((msg, idx) => (
                       <ChatMessage
-                        // biome-ignore lint/suspicious/noArrayIndexKey: messages are append-only and never reordered
-                        key={idx}
+                        key={msg.id}
                         message={msg}
                         isStreaming={isTyping && idx === messages.length - 1 && msg.role === 'assistant'}
                       />

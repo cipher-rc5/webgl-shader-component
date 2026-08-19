@@ -35,20 +35,16 @@ export function useChat(): UseChatReturn {
     setChatSessions((prev) => prev.map((s) => (s.id === sessionId ? { ...s, messages: next } : s)));
   };
 
-  const updateLastAssistantMessage = (sessionId: string, content: string): void => {
+  /** Write a streamed chunk into one specific assistant message, by id. */
+  const updateStreamingMessage = (sessionId: string, messageId: string, content: string): void => {
     if (streamingSessionIdRef.current !== sessionId) return;
 
     setMessages((prev) => {
-      const next =
-        prev.length === 0
-          ? ([{ role: 'assistant', content }] as const satisfies readonly Message[])
-          : (() => {
-              const draft = [...prev];
-              const last = draft.length - 1;
-              if (draft[last]?.role === 'assistant') draft[last] = { role: 'assistant', content };
-              return draft;
-            })();
+      const target = prev.findIndex((m) => m.id === messageId);
+      if (target === -1) return prev;
 
+      const next = [...prev];
+      next[target] = { id: messageId, role: 'assistant', content };
       persistMessages(sessionId, next);
       return next;
     });
@@ -66,9 +62,10 @@ export function useChat(): UseChatReturn {
   const sendMessage = (userInput: string): void => {
     if (!userInput.trim() || isTyping) return;
 
-    const userMsg: Message = { role: 'user', content: userInput };
+    const userMsg: Message = { id: crypto.randomUUID(), role: 'user', content: userInput };
+    const assistantMsg: Message = { id: crypto.randomUUID(), role: 'assistant', content: '' };
     const conversation = [...messages, userMsg];
-    const nextMessages: readonly Message[] = [...conversation, { role: 'assistant', content: '' }];
+    const nextMessages: readonly Message[] = [...conversation, assistantMsg];
 
     // Reuse the active session, or open one on the first message of a new chat.
     let sessionId = currentSessionId;
@@ -92,15 +89,17 @@ export function useChat(): UseChatReturn {
     setIsTyping(true);
 
     const program = streamWebLLMResponse(conversation).pipe(
-      Stream.tap((text: string) => Effect.sync(() => updateLastAssistantMessage(sessionId, text))),
+      Stream.tap((text: string) => Effect.sync(() => updateStreamingMessage(sessionId, assistantMsg.id, text))),
       Stream.runDrain,
       Effect.catchTag('ModelNotLoadedError', () =>
         Effect.sync(() =>
-          updateLastAssistantMessage(sessionId, 'Assistant is not initialized yet. Load the model first.')
+          updateStreamingMessage(sessionId, assistantMsg.id, 'Assistant is not initialized yet. Load the model first.')
         )
       ),
       Effect.catchTag('StreamError', () =>
-        Effect.sync(() => updateLastAssistantMessage(sessionId, "I couldn't generate a response right now."))
+        Effect.sync(() =>
+          updateStreamingMessage(sessionId, assistantMsg.id, "I couldn't generate a response right now.")
+        )
       ),
       Effect.ensuring(
         Effect.sync(() => {
